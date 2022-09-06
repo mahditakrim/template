@@ -1,0 +1,2 @@
+# template
+Go service template
