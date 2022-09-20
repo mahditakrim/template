@@ -1,0 +1,10 @@
+transport:
+  http_addr: ":8080"
+  rpc_addr: ":9090"
+
+db:
+  postgres:
+    addr: "db:5432"
+    db: "library"
+    username: "postgres"
+    password: "postgres"

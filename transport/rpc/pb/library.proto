@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package pb;
+option go_package = "github.com/mahditakrim/template/grpc/pb";
+
+message BookID {
+  int64 id = 1;
+}
+
+message Book {
+  int64 id = 1;
+  string name = 2;
+  string writer = 3;
+  uint32 page_num = 4;
+}
+
+message Books {
+  repeated Book books = 1;
+}
+
+service LibraryService {
+  rpc GetBook(BookID) returns (Book);
+  rpc GetBooks(google.protobuf.Empty) returns (Books);
+  rpc EditeBook(Book) returns (google.protobuf.Empty);
+  rpc CreateBook(Book) returns (BookID);
+  rpc RemoveBook(BookID) returns (google.protobuf.Empty);
+}
