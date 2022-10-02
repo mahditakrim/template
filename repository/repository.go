@@ -68,7 +68,7 @@ func (db *postgres) FindBook(ctx context.Context, bookID int64) (*entity.Book, e
 	var book entity.Book
 	if err := db.conn.QueryRowContext(ctx, "SELECT * FROM books WHERE id = $1", bookID).
 		Scan(&book.ID, &book.Name, &book.Writer, &book.PageNum); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if err == sql.ErrNoRows {
 			return nil, errors.New("book not found")
 		}
 		return nil, err
@@ -81,9 +81,6 @@ func (db *postgres) GetBooks(ctx context.Context) ([]entity.Book, error) {
 
 	rows, err := db.conn.QueryContext(ctx, "SELECT * FROM books")
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("no books")
-		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -99,6 +96,10 @@ func (db *postgres) GetBooks(ctx context.Context) ([]entity.Book, error) {
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if books == nil {
+		return nil, errors.New("no books")
 	}
 
 	return books, nil
