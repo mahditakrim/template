@@ -7,7 +7,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOMOD=$(GOCMD) mod
 GORUN=$(GOCMD) run
-BINARY_NAME=app
+BINARY_NAME=library
 
 all: deps test run
 
@@ -26,6 +26,11 @@ run-race:
 		$(GORUN) -race cmd/main.go
 
 deps:
+		$(GOMOD) tidy
+		$(GOMOD) vendor
+
+upgrade-deps:
+		go get -u all
 		$(GOMOD) tidy
 		$(GOMOD) vendor
 

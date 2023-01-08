@@ -8,6 +8,7 @@ import (
 
 type (
 	Config struct {
+		LogPath   string    `yaml:"log_path"`
 		Transport transport `yaml:"transport"`
 		DB        db        `yaml:"db"`
 	}

@@ -12,11 +12,11 @@ import (
 
 type Repository interface {
 	Close() error
-	InsertBook(context.Context, *entity.Book) error
-	DeleteBook(context.Context, int64) error
-	UpdateBook(context.Context, *entity.Book) error
-	FindBook(context.Context, int64) (*entity.Book, error)
-	GetBooks(context.Context) ([]entity.Book, error)
+	InsertBook(ctx context.Context, book *entity.Book) error
+	DeleteBook(ctx context.Context, bookID int64) error
+	UpdateBook(ctx context.Context, book *entity.Book) error
+	FindBook(ctx context.Context, bookID int64) (*entity.Book, error)
+	GetBooks(ctx context.Context) ([]entity.Book, error)
 }
 
 type postgres struct {

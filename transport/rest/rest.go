@@ -11,10 +11,11 @@ import (
 )
 
 type rest struct {
+	addr   string
 	router *iris.Application
 }
 
-func NewHttp(service service.Library) (transport.Transport, error) {
+func NewHttp(service service.Library, addr string) (transport.Transport, error) {
 
 	if service == nil {
 		return nil, errors.New("nil service reference")
@@ -30,18 +31,17 @@ func NewHttp(service service.Library) (transport.Transport, error) {
 
 	})
 
-	return &rest{router}, nil
+	return &rest{addr, router}, nil
 }
 
-func (http *rest) Run(addr string) error {
+func (http *rest) Run() error {
 
-	return http.router.Listen(addr, iris.WithoutServerError(iris.ErrServerClosed))
+	return http.router.Listen(http.addr, iris.WithoutServerError(iris.ErrServerClosed))
 }
 
 func (http *rest) Shutdown() error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-
 	return http.router.Shutdown(ctx)
 }

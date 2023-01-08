@@ -14,7 +14,7 @@ services:
       - ./db-data:/var/lib/postgresql/data
       - ./create_schema.sql:/docker-entrypoint-initdb.d/create_schema.sql
 
-  app:
+  library:
     build: .
     restart: always
     depends_on:
@@ -22,3 +22,5 @@ services:
     ports:
       - "8080:8080"
       - "9090:9090"
+    volumes:
+      - ./log.txt:/app/log.txt

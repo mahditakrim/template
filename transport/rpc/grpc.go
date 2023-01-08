@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"errors"
-	"fmt"
 	"net"
 
 	"github.com/mahditakrim/template/service"
@@ -12,31 +11,35 @@ import (
 )
 
 type rpc struct {
-	grpc    *grpc.Server
-	service service.Library
+	listener net.Listener
+	grpc     *grpc.Server
+	service  service.Library
 	pb.UnimplementedLibraryServiceServer
 }
 
-func NewRPC(service service.Library) (transport.Transport, error) {
+func NewRPC(service service.Library, addr string) (transport.Transport, error) {
 
 	if service == nil {
 		return nil, errors.New("nil service reference")
 	}
 
-	return &rpc{grpc.NewServer(), service, pb.UnimplementedLibraryServiceServer{}}, nil
-}
-
-func (rpc *rpc) Run(addr string) error {
-
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	pb.RegisterLibraryServiceServer(rpc.grpc, rpc)
-	fmt.Println("rpc server listening on", addr)
+	return &rpc{
+		listener,
+		grpc.NewServer(),
+		service,
+		pb.UnimplementedLibraryServiceServer{},
+	}, nil
+}
 
-	return rpc.grpc.Serve(listener)
+func (rpc *rpc) Run() error {
+
+	pb.RegisterLibraryServiceServer(rpc.grpc, rpc)
+	return rpc.grpc.Serve(rpc.listener)
 }
 
 func (rpc *rpc) Shutdown() error {

@@ -1,4 +1,4 @@
 FROM alpine:latest
-ADD ./app ./config.yaml /app/
+ADD ./library ./config.yaml /app/
 WORKDIR /app
-ENTRYPOINT ["/app/app"]
+ENTRYPOINT ["/app/library"]
