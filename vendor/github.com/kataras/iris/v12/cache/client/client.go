@@ -2,7 +2,7 @@ package client
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -17,8 +17,8 @@ import (
 // register one client handler per route.
 //
 // it's just calls a remote cache service server/handler,
-//  which lives on other, external machine.
 //
+//	which lives on other, external machine.
 type ClientHandler struct {
 	// bodyHandler the original route's handler
 	bodyHandler context.Handler
@@ -101,7 +101,7 @@ const (
 // if <=minimumAllowedCacheDuration then the server will try to parse from "cache-control" header
 //
 // client-side function
-func (h *ClientHandler) ServeHTTP(ctx context.Context) {
+func (h *ClientHandler) ServeHTTP(ctx *context.Context) {
 	// check for deniers, if at least one of them return true
 	// for this specific request, then skip the whole cache
 	if !h.rule.Claim(ctx) {
@@ -153,15 +153,16 @@ func (h *ClientHandler) ServeHTTP(ctx context.Context) {
 			return
 		}
 		// go Client.Do(request)
-		_, err = Client.Do(request)
+		resp, err := Client.Do(request)
 		if err != nil {
 			return
 		}
+		resp.Body.Close()
 	} else {
 		// get the status code , content type and the write the response body
 		ctx.ContentType(response.Header.Get(cfg.ContentTypeHeader))
 		ctx.StatusCode(response.StatusCode)
-		responseBody, err := ioutil.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(response.Body)
 		response.Body.Close()
 		if err != nil {
 			return
