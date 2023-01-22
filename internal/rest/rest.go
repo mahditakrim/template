@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/kataras/iris/v12"
+	"github.com/mahditakrim/template/luncher"
 	"github.com/mahditakrim/template/service"
-	"github.com/mahditakrim/template/transport"
 )
 
 type rest struct {
@@ -15,7 +15,7 @@ type rest struct {
 	router *iris.Application
 }
 
-func NewHttp(service service.Library, addr string) (transport.Transport, error) {
+func NewHttp(service service.Service, addr string) (luncher.Runnable, error) {
 
 	if service == nil {
 		return nil, errors.New("nil service reference")

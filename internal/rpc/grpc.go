@@ -4,20 +4,20 @@ import (
 	"errors"
 	"net"
 
+	"github.com/mahditakrim/template/internal/rpc/pb"
+	"github.com/mahditakrim/template/luncher"
 	"github.com/mahditakrim/template/service"
-	"github.com/mahditakrim/template/transport"
-	"github.com/mahditakrim/template/transport/rpc/pb"
 	"google.golang.org/grpc"
 )
 
 type rpc struct {
 	listener net.Listener
 	grpc     *grpc.Server
-	service  service.Library
+	service  service.Service
 	pb.UnimplementedLibraryServiceServer
 }
 
-func NewRPC(service service.Library, addr string) (transport.Transport, error) {
+func NewRPC(service service.Service, addr string) (luncher.Runnable, error) {
 
 	if service == nil {
 		return nil, errors.New("nil service reference")

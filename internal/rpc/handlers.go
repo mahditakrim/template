@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/mahditakrim/template/entity"
-	"github.com/mahditakrim/template/transport/rpc/pb"
+	"github.com/mahditakrim/template/internal/rpc/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

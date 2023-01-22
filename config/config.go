@@ -8,12 +8,12 @@ import (
 
 type (
 	Config struct {
-		LogPath   string    `yaml:"log_path"`
-		Transport transport `yaml:"transport"`
-		DB        db        `yaml:"db"`
+		LogPath string `yaml:"log_path"`
+		Web     web    `yaml:"web"`
+		DB      db     `yaml:"db"`
 	}
 
-	transport struct {
+	web struct {
 		HttpAddr string `yaml:"http_addr"`
 		RpcAddr  string `yaml:"rpc_addr"`
 	}
@@ -28,19 +28,15 @@ type (
 	}
 )
 
-var globalConfig Config
-
-func Init() error {
+func Init() (*Config, error) {
 
 	yamlFile, err := os.ReadFile("./config.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return yaml.Unmarshal(yamlFile, &globalConfig)
-}
+	conf := &Config{}
+	err = yaml.Unmarshal(yamlFile, conf)
 
-func Get() Config {
-
-	return globalConfig
+	return conf, err
 }

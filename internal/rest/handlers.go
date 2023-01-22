@@ -6,7 +6,7 @@ import (
 	"github.com/mahditakrim/template/service"
 )
 
-func addBookHandler(library service.Library) func(iris.Context) {
+func addBookHandler(library service.Service) func(iris.Context) {
 	return func(ctx iris.Context) {
 
 		book := &entity.Book{}
@@ -35,7 +35,7 @@ func addBookHandler(library service.Library) func(iris.Context) {
 	}
 }
 
-func removeBookHandler(library service.Library) func(iris.Context) {
+func removeBookHandler(library service.Service) func(iris.Context) {
 	return func(ctx iris.Context) {
 
 		id, err := ctx.URLParamInt64("book_id")
@@ -56,7 +56,7 @@ func removeBookHandler(library service.Library) func(iris.Context) {
 	}
 }
 
-func editeBookHandler(library service.Library) func(iris.Context) {
+func editeBookHandler(library service.Service) func(iris.Context) {
 	return func(ctx iris.Context) {
 
 		book := &entity.Book{}
@@ -85,7 +85,7 @@ func editeBookHandler(library service.Library) func(iris.Context) {
 	}
 }
 
-func getBookHandler(library service.Library) func(iris.Context) {
+func getBookHandler(library service.Service) func(iris.Context) {
 	return func(ctx iris.Context) {
 
 		id, err := ctx.URLParamInt64("book_id")
@@ -106,7 +106,7 @@ func getBookHandler(library service.Library) func(iris.Context) {
 	}
 }
 
-func getBooksHandler(library service.Library) func(iris.Context) {
+func getBooksHandler(library service.Service) func(iris.Context) {
 	return func(ctx iris.Context) {
 
 		book, err := library.GetBooks(ctx.Request().Context())

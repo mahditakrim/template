@@ -1,6 +1,6 @@
 log_path: "./log.txt"
 
-transport:
+web:
   http_addr: ":8080"
   rpc_addr: ":9090"
 
