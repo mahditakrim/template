@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 
 package pb;
-option go_package = "github.com/mahditakrim/template/grpc/pb";
+option go_package = "github.com/mahditakrim/template/internal/grpc/pb";
 
 message BookID {
   int64 id = 1;
