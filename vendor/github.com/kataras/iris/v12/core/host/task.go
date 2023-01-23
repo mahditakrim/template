@@ -6,10 +6,10 @@ package host
 // supervisor.
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/kataras/iris/v12/core/netutil"
@@ -21,14 +21,14 @@ import (
 // This function should be registered on Serve.
 func WriteStartupLogOnServe(w io.Writer) func(TaskHost) {
 	return func(h TaskHost) {
-		guessScheme := netutil.ResolveScheme(h.Supervisor.autoTLS || h.Supervisor.manuallyTLS || h.Supervisor.Fallback != nil)
-		addr := h.Supervisor.FriendlyAddr
-		if addr == "" {
-			addr = h.Supervisor.Server.Addr
+		guessScheme := netutil.ResolveScheme(h.Supervisor.manuallyTLS)
+		listeningURI := netutil.ResolveURL(guessScheme, h.Supervisor.Server.Addr)
+		interruptkey := "CTRL"
+		if runtime.GOOS == "darwin" {
+			interruptkey = "CMD"
 		}
-		listeningURI := netutil.ResolveURL(guessScheme, addr)
-		_, _ = fmt.Fprintf(w, "Now listening on: %s\nApplication started. Press CTRL+C to shut down.\n",
-			listeningURI)
+		_, _ = w.Write([]byte(fmt.Sprintf("Now listening on: %s\nApplication started. Press %s+C to shut down.\n",
+			listeningURI, interruptkey)))
 	}
 }
 
@@ -38,7 +38,7 @@ func ShutdownOnInterrupt(su *Supervisor, shutdownTimeout time.Duration) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.TODO(), shutdownTimeout)
 		defer cancel()
-		su.shutdownOnInterrupt(ctx)
+		su.Shutdown(ctx)
 		su.RestoreFlow()
 	}
 }
@@ -58,9 +58,9 @@ func (h TaskHost) Serve() error {
 		return err
 	}
 
-	// if http.serverclosed ignore the error, it will have this error
+	// if http.serverclosed ignroe the error, it will have this error
 	// from the previous close
-	if err := h.Supervisor.Server.Serve(l); !errors.Is(err, http.ErrServerClosed) {
+	if err := h.Supervisor.Server.Serve(l); err != http.ErrServerClosed {
 		return err
 	}
 	return nil

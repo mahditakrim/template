@@ -3,8 +3,6 @@ package router
 import (
 	"mime"
 	"path/filepath"
-
-	"github.com/kataras/iris/v12/context"
 )
 
 var types = map[string]string{
@@ -49,7 +47,7 @@ var types = map[string]string{
 	".bsh":       "application/x-bsh",
 	".bz2":       "application/x-bzip2",
 	".bz":        "application/x-bzip",
-	".c++":       context.ContentTextHeaderValue,
+	".c++":       "text/plain",
 	".c":         "text/x-c",
 	".cab":       "application/vnd.ms-cab-compressed",
 	".cat":       "application/vndms-pkiseccat",
@@ -62,8 +60,8 @@ var types = map[string]string{
 	".chat":      "application/x-chat",
 	".chrt":      "application/vnd.kde.kchart",
 	".class":     "application/java",
-	".com":       context.ContentTextHeaderValue,
-	".conf":      context.ContentTextHeaderValue,
+	".com":       "text/plain",
+	".conf":      "text/plain",
 	".cpio":      "application/x-cpio",
 	".cpp":       "text/x-c",
 	".cpt":       "application/mac-compactpro",
@@ -73,12 +71,12 @@ var types = map[string]string{
 	".csh":       "text/x-scriptcsh",
 	".css":       "text/css",
 	".csv":       "text/csv",
-	".cxx":       context.ContentTextHeaderValue,
+	".cxx":       "text/plain",
 	".dar":       "application/x-dar",
 	".dcr":       "application/x-director",
 	".deb":       "application/x-debian-package",
 	".deepv":     "application/x-deepv",
-	".def":       context.ContentTextHeaderValue,
+	".def":       "text/plain",
 	".der":       "application/x-x509-ca-cert",
 	".dif":       "video/x-dv",
 	".dir":       "application/x-director",
@@ -120,7 +118,7 @@ var types = map[string]string{
 	".frl":       "application/freeloader",
 	".funk":      "audio/make",
 	".g3":        "image/g3fax",
-	".g":         context.ContentTextHeaderValue,
+	".g":         "text/plain",
 	".gif":       "image/gif",
 	".gl":        "video/gl",
 	".gsd":       "audio/x-gsm",
@@ -151,7 +149,7 @@ var types = map[string]string{
 	".ico":       "image/x-icon",
 	".ics":       "text/calendar",
 	".icz":       "text/calendar",
-	".idc":       context.ContentTextHeaderValue,
+	".idc":       "text/plain",
 	".ief":       "image/ief",
 	".iefs":      "image/ief",
 	".iges":      "application/iges",
@@ -177,10 +175,8 @@ var types = map[string]string{
 	".jpeg":      "image/jpeg",
 	".jpg":       "image/jpeg",
 	".jps":       "image/x-jps",
-	".js":        context.ContentJavascriptHeaderValue,
-	".mjs":       context.ContentJavascriptHeaderValue,
-	".json":      context.ContentJSONHeaderValue,
-	".vue":       context.ContentJavascriptHeaderValue,
+	".js":        "application/javascript",
+	".json":      "application/json",
 	".jut":       "image/jutvision",
 	".kar":       "audio/midi",
 	".karbon":    "application/vnd.kde.karbon",
@@ -200,11 +196,11 @@ var types = map[string]string{
 	".latex":     "application/x-latex",
 	".lha":       "application/lha",
 	".lhx":       "application/octet-stream",
-	".list":      context.ContentTextHeaderValue,
+	".list":      "text/plain",
 	".lma":       "audio/nspaudio",
-	".log":       context.ContentTextHeaderValue,
+	".log":       "text/plain",
 	".lsp":       "text/x-scriptlisp",
-	".lst":       context.ContentTextHeaderValue,
+	".lst":       "text/plain",
 	".lsx":       "text/x-la-asf",
 	".ltx":       "application/x-latex",
 	".lzh":       "application/octet-stream",
@@ -217,7 +213,7 @@ var types = map[string]string{
 	".man":       "application/x-troff-man",
 	".manifest":  "text/cache-manifest",
 	".map":       "application/x-navimap",
-	".mar":       context.ContentTextHeaderValue,
+	".mar":       "text/plain",
 	".mbd":       "application/mbedlet",
 	".mc$":       "application/x-magic-cap-package-10",
 	".mcd":       "application/mcad",
@@ -370,7 +366,7 @@ var types = map[string]string{
 	".saveme":    "application/octet-stream",
 	".sbk":       "application/x-tbook",
 	".scm":       "text/x-scriptscheme",
-	".sdml":      context.ContentTextHeaderValue,
+	".sdml":      "text/plain",
 	".sdp":       "application/sdp",
 	".sdr":       "application/sounder",
 	".sea":       "application/sea",
@@ -419,7 +415,7 @@ var types = map[string]string{
 	".tex":       "application/x-tex",
 	".texi":      "application/x-texinfo",
 	".texinfo":   "application/x-texinfo",
-	".text":      context.ContentTextHeaderValue,
+	".text":      "text/plain",
 	".tgz":       "application/gnutar",
 	".tif":       "image/tiff",
 	".tiff":      "image/tiff",
@@ -428,7 +424,7 @@ var types = map[string]string{
 	".tsp":       "application/dsptype",
 	".tsv":       "text/tab-separated-values",
 	".turbot":    "image/florian",
-	".txt":       context.ContentTextHeaderValue,
+	".txt":       "text/plain",
 	".uil":       "text/x-uil",
 	".uni":       "text/uri-list",
 	".unis":      "text/uri-list",
@@ -504,7 +500,7 @@ var types = map[string]string{
 	".xlv":       "application/excel",
 	".xlw":       "application/excel",
 	".xm":        "audio/xm",
-	".xml":       context.ContentXMLHeaderValue,
+	".xml":       "text/xml",
 	".xmz":       "xgl/movie",
 	".xpix":      "application/x-vndls-xpix",
 	".xpm":       "image/x-xpixmap",
@@ -560,9 +556,9 @@ func init() {
 // system's mime.types file(s) if available under one or more of these
 // names:
 //
-//	/etc/mime.types
-//	/etc/apache2/mime.types
-//	/etc/apache/mime.types
+//   /etc/mime.types
+//   /etc/apache2/mime.types
+//   /etc/apache/mime.types
 //
 // On Windows, MIME types are extracted from the registry.
 //
@@ -573,21 +569,22 @@ func TypeByExtension(ext string) (typ string) {
 	}
 
 	if ext[0] != '.' { // try to take it by filename
-		typ = context.TrimHeaderValue(TypeByFilename(ext))
+		typ = TypeByFilename(ext)
 		if typ == "" {
 			ext = "." + ext // if error or something wrong then prepend the dot
 		}
 	}
 
 	if typ == "" {
-		typ = context.TrimHeaderValue(mime.TypeByExtension(ext))
+		typ = mime.TypeByExtension(ext)
 	}
 
 	// mime.TypeByExtension returns as text/plain; | charset=utf-8 the static .js (not always)
-	if ext == ".js" && (typ == context.ContentJavascriptHeaderValue || typ == context.ContentTextHeaderValue) {
-		typ = context.ContentJavascriptHeaderValue
+	if ext == ".js" && (typ == "text/plain" || typ == "text/plain; charset=utf-8") {
+		if ext == ".js" {
+			typ = "application/javascript"
+		}
 	}
-
 	return typ
 }
 

@@ -1,7 +1,6 @@
 package netutil
 
 import (
-	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -21,7 +20,6 @@ import (
 // A raw copy of standar library.
 type tcpKeepAliveListener struct {
 	*net.TCPListener
-	keepAliveDur time.Duration
 }
 
 // Accept accepts tcp connections aka clients.
@@ -33,24 +31,23 @@ func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err = tc.SetKeepAlive(true); err != nil {
 		return tc, err
 	}
-	if err = tc.SetKeepAlivePeriod(l.keepAliveDur); err != nil {
+	if err = tc.SetKeepAlivePeriod(3 * time.Minute); err != nil {
 		return tc, err
 	}
 	return tc, nil
 }
 
 // TCP returns a new tcp(ipv6 if supported by network) and an error on failure.
-func TCP(addr string, reuse bool) (net.Listener, error) {
-	var cfg net.ListenConfig
-	if reuse {
-		cfg.Control = control
+func TCP(addr string) (net.Listener, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, err
 	}
-
-	return cfg.Listen(context.Background(), "tcp", addr)
+	return l, nil
 }
 
 // TCPKeepAlive returns a new tcp keep alive Listener and an error on failure.
-func TCPKeepAlive(addr string, reuse bool, keepAliveDur time.Duration) (ln net.Listener, err error) {
+func TCPKeepAlive(addr string) (ln net.Listener, err error) {
 	// if strings.HasPrefix(addr, "127.0.0.1") {
 	// 	// it's ipv4, use ipv4 tcp listener instead of the default ipv6. Don't.
 	// 	ln, err = net.Listen("tcp4", addr)
@@ -58,11 +55,11 @@ func TCPKeepAlive(addr string, reuse bool, keepAliveDur time.Duration) (ln net.L
 	// 	ln, err = TCP(addr)
 	// }
 
-	ln, err = TCP(addr, reuse)
+	ln, err = TCP(addr)
 	if err != nil {
 		return nil, err
 	}
-	return tcpKeepAliveListener{ln.(*net.TCPListener), keepAliveDur}, nil
+	return tcpKeepAliveListener{ln.(*net.TCPListener)}, nil
 }
 
 // UNIX returns a new unix(file) Listener.
@@ -106,7 +103,6 @@ func CERT(addr string, cert tls.Certificate) (net.Listener, error) {
 	tlsConfig := &tls.Config{
 		Certificates:             []tls.Certificate{cert},
 		PreferServerCipherSuites: true,
-		MinVersion:               tls.VersionTLS13,
 	}
 	return tls.NewListener(l, tlsConfig), nil
 }
@@ -114,20 +110,19 @@ func CERT(addr string, cert tls.Certificate) (net.Listener, error) {
 // LETSENCRYPT returns a new Automatic TLS Listener using letsencrypt.org service
 // receives three parameters,
 // the first is the host of the server,
-// second one should declare if the underline tcp listener can be binded more than once,
-// third can be the server name(domain) or empty if skip verification is the expected behavior (not recommended),
-// and the forth is optionally, the cache directory, if you skip it then the cache directory is "./certcache"
+// second can be the server name(domain) or empty if skip verification is the expected behavior (not recommended)
+// and the third is optionally, the cache directory, if you skip it then the cache directory is "./certcache"
 // if you want to disable cache directory then simple give it a value of empty string ""
 //
 // does NOT supports localhost domains for testing.
 //
 // this is the recommended function to use when you're ready for production state.
-func LETSENCRYPT(addr string, reuse bool, serverName string, cacheDirOptional ...string) (net.Listener, error) {
+func LETSENCRYPT(addr string, serverName string, cacheDirOptional ...string) (net.Listener, error) {
 	if portIdx := strings.IndexByte(addr, ':'); portIdx == -1 {
 		addr += ":443"
 	}
 
-	l, err := TCP(addr, reuse)
+	l, err := TCP(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +141,7 @@ func LETSENCRYPT(addr string, reuse bool, serverName string, cacheDirOptional ..
 	} else {
 		m.Cache = autocert.DirCache(cacheDir)
 	}
-	tlsConfig := &tls.Config{GetCertificate: m.GetCertificate, MinVersion: tls.VersionTLS13}
+	tlsConfig := &tls.Config{GetCertificate: m.GetCertificate}
 
 	// use InsecureSkipVerify or ServerName to a value
 	if serverName == "" {

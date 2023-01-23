@@ -9,13 +9,9 @@ import (
 const (
 	// ParamStart the character in string representation where the underline router starts its dynamic named parameter.
 	ParamStart = ":"
-	// paramStartCharacter is the character as rune of ParamStart.
-	paramStartCharacter = ':'
 	// WildcardParamStart the character in string representation where the underline router starts its dynamic wildcard
 	// path parameter.
 	WildcardParamStart = "*"
-	// wildcardParamStartCharacter is the character as rune of WildcardParamStart.
-	wildcardParamStartCharacter = '*'
 )
 
 // An iris-specific identical version of the https://github.com/kataras/muxie version 1.0.0 released at 15 Oct 2018
@@ -34,8 +30,8 @@ type trieNode struct {
 	staticKey string
 
 	// insert data.
-	Route    context.RouteReadOnly
-	Handlers context.Handlers
+	Handlers  context.Handlers
+	RouteName string
 }
 
 func newTrieNode() *trieNode {
@@ -93,9 +89,7 @@ type trie struct {
 	hasRootWildcard bool
 	hasRootSlash    bool
 
-	statusCode int // for error codes only, method is ignored.
-	method     string
-
+	method string
 	// subdomain is empty for default-hostname routes,
 	// ex: mysubdomain.
 	subdomain string
@@ -114,11 +108,8 @@ func slowPathSplit(path string) []string {
 	return strings.Split(path, pathSep)[1:]
 }
 
-func (tr *trie) insert(path string, route context.RouteReadOnly, handlers context.Handlers) {
+func (tr *trie) insert(path, routeName string, handlers context.Handlers) {
 	input := slowPathSplit(path)
-	if len(input) == 0 {
-		return
-	}
 
 	n := tr.root
 	if path == pathSep {
@@ -128,31 +119,23 @@ func (tr *trie) insert(path string, route context.RouteReadOnly, handlers contex
 	var paramKeys []string
 
 	for _, s := range input {
-		if len(s) == 0 {
-			continue
-		}
-
 		c := s[0]
 
-		if len(s) > 1 { // has more than one character.
-			// get the next character, should be the name of the parameter.
-			// E.g:
-			// If /test/:param (or /test/*param) then it's dynamic.
-			// If /test/: (or /test/*) then it's static.
-			if isParam, isWildcard := c == paramStartCharacter, c == wildcardParamStartCharacter; isParam || isWildcard {
-				n.hasDynamicChild = true
-				paramKeys = append(paramKeys, s[1:]) // without : or *.
-				if isParam {
-					n.childNamedParameter = true
-					s = ParamStart
-				}
+		if isParam, isWildcard := c == ParamStart[0], c == WildcardParamStart[0]; isParam || isWildcard {
+			n.hasDynamicChild = true
+			paramKeys = append(paramKeys, s[1:]) // without : or *.
 
-				if isWildcard {
-					n.childWildcardParameter = true
-					s = WildcardParamStart
-					if tr.root == n {
-						tr.hasRootWildcard = true
-					}
+			// if node has already a wildcard, don't force a value, check for true only.
+			if isParam {
+				n.childNamedParameter = true
+				s = ParamStart
+			}
+
+			if isWildcard {
+				n.childWildcardParameter = true
+				s = WildcardParamStart
+				if tr.root == n {
+					tr.hasRootWildcard = true
 				}
 			}
 		}
@@ -165,9 +148,8 @@ func (tr *trie) insert(path string, route context.RouteReadOnly, handlers contex
 		n = n.getChild(s)
 	}
 
-	n.Route = route
+	n.RouteName = routeName
 	n.Handlers = handlers
-
 	n.paramKeys = paramKeys
 	n.key = path
 	n.end = true
@@ -181,7 +163,6 @@ func (tr *trie) insert(path string, route context.RouteReadOnly, handlers contex
 	}
 
 	n.staticKey = path[:i]
-	// fmt.Printf("trie.insert: (whole path=%v) Path: %s, Route name: %s, Handlers len: %d\n", n.end, n.key, route.Name(), len(handlers))
 }
 
 func (tr *trie) search(q string, params *context.RequestParams) *trieNode {
@@ -206,16 +187,15 @@ func (tr *trie) search(q string, params *context.RequestParams) *trieNode {
 
 	for {
 		if i == end || q[i] == pathSepB {
-			segment := q[start:i]
-			if child := n.getChild(segment); child != nil {
+			if child := n.getChild(q[start:i]); child != nil {
 				n = child
 			} else if n.childNamedParameter {
 				n = n.getChild(ParamStart)
 				if ln := len(paramValues); cap(paramValues) > ln {
 					paramValues = paramValues[:ln+1]
-					paramValues[ln] = segment
+					paramValues[ln] = q[start:i]
 				} else {
-					paramValues = append(paramValues, segment)
+					paramValues = append(paramValues, q[start:i])
 				}
 			} else if n.childWildcardParameter {
 				n = n.getChild(WildcardParamStart)
@@ -228,7 +208,7 @@ func (tr *trie) search(q string, params *context.RequestParams) *trieNode {
 				break
 			} else {
 				n = n.findClosestParentWildcardNode()
-				if n != nil && len(n.paramKeys) > 0 {
+				if n != nil {
 					// means that it has :param/static and *wildcard, we go trhough the :param
 					// but the next path segment is not the /static, so go back to *wildcard
 					// instead of not found.
@@ -263,7 +243,7 @@ func (tr *trie) search(q string, params *context.RequestParams) *trieNode {
 
 	if n == nil || !n.end {
 		if n != nil { // we need it on both places, on last segment (below) or on the first unnknown (above).
-			if n = n.findClosestParentWildcardNode(); n != nil && len(n.paramKeys) > 0 {
+			if n = n.findClosestParentWildcardNode(); n != nil {
 				params.Set(n.paramKeys[0], q[len(n.staticKey):])
 				return n
 			}
@@ -278,10 +258,6 @@ func (tr *trie) search(q string, params *context.RequestParams) *trieNode {
 			// the /other2/*myparam and not the root wildcard, which is what we want.
 			//
 			n = tr.root.getChild(WildcardParamStart)
-			if len(n.paramKeys) == 0 { // fix crashes on /*/*/*.
-				return nil
-			}
-
 			params.Set(n.paramKeys[0], q[1:])
 			return n
 		}
