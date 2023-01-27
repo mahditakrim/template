@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	_ "github.com/lib/pq"
 	"github.com/mahditakrim/template/entity"
 )
 

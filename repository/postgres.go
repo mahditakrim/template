@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	_ "github.com/lib/pq"
 	"github.com/mahditakrim/template/entity"
 )
 
